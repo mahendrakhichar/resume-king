@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Database and file upload caches
+chroma_db/
+uploads/
+.agents/
+*.db
+*.sqlite
+*.sqlite3
+
+# Unit test / coverage reports
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.tox/
+
+# Logs
+*.log
+logs/

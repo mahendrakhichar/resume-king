@@ -1,0 +1,57 @@
+# User-requested exclusions
+testing/
+
+# Dependency directories
+node_modules/
+.venv/
+env/
+venv/
+ENV/
+backend/.venv/
+frontend/node_modules/
+
+# Local environment configuration
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# Local database and document storage caches
+chroma_db/
+backend/chroma_db/
+uploads/
+backend/uploads/
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache and build directories
+__pycache__/
+backend/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Frontend builds
+dist/
+dist-ssr/
+frontend/dist/
+
+# IDEs, Editors, and OS-specific files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*

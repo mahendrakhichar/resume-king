@@ -1,0 +1,45 @@
+# FastAPI & Server
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+websockets>=12.0
+
+# Database
+sqlalchemy[asyncio]>=2.0.30
+asyncpg>=0.29.0
+alembic>=1.13.0
+
+# Validation & Settings
+pydantic>=2.7.0
+pydantic-settings>=2.3.0
+python-dotenv>=1.0.0
+
+# Resume Parsing
+PyMuPDF>=1.24.0
+pdfplumber>=0.11.0
+python-docx>=1.1.0
+
+# AI / LLM
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0
+langchain-google-genai>=2.0.0
+langchain-groq>=0.2.0
+langgraph>=0.2.0
+
+# Vector Database
+chromadb>=0.5.0
+
+# PDF Generation
+weasyprint>=62.0
+Jinja2>=3.1.0
+
+# Auth
+httpx>=0.27.0
+python-jose[cryptography]>=3.3.0
+cryptography>=42.0.0
+
+# Utilities
+aiofiles>=23.2.0
+uuid6>=2024.1.12
+tenacity>=8.3.0
