@@ -1,8 +1,17 @@
 import axios from "axios";
 
-// Standard HTTP client proxyed to localhost:8000 via Vite configuration
+// Determine the API base URL dynamically (e.g. for Vercel production to Render backend)
+let apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "/api";
+
+if (apiBaseUrl && apiBaseUrl.startsWith("http")) {
+  // Ensure we append /api if it's an absolute backend URL and doesn't end with it
+  if (!apiBaseUrl.endsWith("/api") && !apiBaseUrl.endsWith("/api/")) {
+    apiBaseUrl = apiBaseUrl.replace(/\/$/, "") + "/api";
+  }
+}
+
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: apiBaseUrl,
   headers: {
     "Content-Type": "application/json",
   },

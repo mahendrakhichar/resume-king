@@ -11,10 +11,19 @@ export function useWebSocket(sessionId: string | undefined, onUpdate?: (update: 
   useEffect(() => {
     if (!sessionId) return;
 
-    // Build absolute WS URL (uses host proxy or current origin)
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/${sessionId}`;
+    // Build absolute WS URL (uses absolute backend URL or current origin)
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+    let wsUrl = "";
+
+    if (apiBaseUrl && apiBaseUrl.startsWith("http")) {
+      const url = new URL(apiBaseUrl);
+      const protocol = url.protocol === "https:" ? "wss:" : "ws:";
+      wsUrl = `${protocol}//${url.host}/ws/${sessionId}`;
+    } else {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const host = window.location.host;
+      wsUrl = `${protocol}//${host}/ws/${sessionId}`;
+    }
 
     console.log(`Connecting to WebSocket: ${wsUrl}`);
     const socket = new WebSocket(wsUrl);
