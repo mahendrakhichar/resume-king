@@ -84,7 +84,10 @@ class ClerkAuthService:
                     break
 
             if not rsa_key:
-                raise HTTPException(status_code=401, detail="Invalid Key ID (kid) / signing key not found")
+                raise HTTPException(
+                    status_code=401,
+                    detail=f"Invalid Key ID (kid) '{kid}' / signing key not found in JWKS keys: {[k.get('kid') for k in jwks.get('keys', [])]}"
+                )
 
             # Verify signature & decodes payload
             # In Clerk JWT, 'azp' holds the frontend client/origin or publishable key, or we just check signature & issuer
@@ -101,10 +104,10 @@ class ClerkAuthService:
             raise HTTPException(status_code=401, detail="Token signature has expired")
         except JWTError as e:
             logger.warning(f"JWT verification failed: {e}")
-            raise HTTPException(status_code=401, detail="Could not validate credentials")
+            raise HTTPException(status_code=401, detail=f"Could not validate credentials: {str(e)}")
         except Exception as e:
             logger.error(f"Unexpected error in token verification: {e}")
-            raise HTTPException(status_code=500, detail="Internal authentication error")
+            raise HTTPException(status_code=500, detail=f"Internal authentication error: {str(e)}")
 
 
 async def get_current_user_claims(
@@ -120,6 +123,9 @@ async def get_current_user_claims(
                 "name": "Mock SDE Candidate",
                 "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150"
             }
-        raise HTTPException(status_code=401, detail="Bearer token is required")
+        raise HTTPException(
+            status_code=401,
+            detail=f"Bearer token is required. (env={settings.app_env}, debug={settings.app_debug})"
+        )
 
     return await ClerkAuthService.verify_token(credentials.credentials)
