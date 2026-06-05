@@ -38,6 +38,8 @@ class Education(BaseModel):
         if isinstance(data, dict):
             if "highlights" in data and data["highlights"] is None:
                 data["highlights"] = []
+            if "gpa" in data and data["gpa"] is not None:
+                data["gpa"] = str(data["gpa"])
         return data
 
 
