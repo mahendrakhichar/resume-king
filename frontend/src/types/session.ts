@@ -36,6 +36,7 @@ export interface SessionResponse {
   ats_score_before?: number;
   ats_score_after?: number;
   job_analysis?: JDAnalysis;
+  parsed_resume?: any;
   created_at: string;
   updated_at: string;
 }

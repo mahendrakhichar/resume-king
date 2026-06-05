@@ -31,6 +31,7 @@ TASK_MODEL_MAP: dict[str, str] = {
     # Fast tier: validation, small checks
     "validation": "fast",
     "quick_summary": "fast",
+    "hiring_committee": "hiring_committee",
 }
 
 # ─── Fallback Routing Hierarchy (Direct Keys Prioritized) ───────────────
@@ -54,6 +55,12 @@ LLM_FALLBACKS: dict[str, list[str]] = {
         "nvidia/nvidia/llama-3.1-nemotron-nano-8b-v1",
         "nvidia/nvidia/nemotron-mini-4b-instruct",
         "openrouter/moonshotai/kimi-k2.6:free",
+    ],
+    "hiring_committee": [
+        "google/gemini-2.5-flash:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "qwen/qwen-2.5-72b-instruct:free",
+        "google/gemini-2.5-pro:free",
     ]
 }
 
@@ -363,6 +370,46 @@ class LLMService:
         )
 
     @classmethod
+    def _normalize_openrouter_model(cls, model_name: str) -> str:
+        """Normalize a direct provider model string to a valid OpenRouter model ID."""
+        # Remove nested openrouter/ prefixes
+        while model_name.startswith("openrouter/"):
+            model_name = model_name[len("openrouter/"):]
+            
+        if model_name == "free":
+            return "openrouter/free"
+            
+        # Map direct names/prefixes to valid OpenRouter model paths
+        parts = model_name.split("/", 1)
+        if len(parts) == 2:
+            provider, name = parts
+            if provider == "groq":
+                if "3.3-70b" in name:
+                    return "meta-llama/llama-3.3-70b-instruct:free"
+                elif "3.1-8b" in name:
+                    return "meta-llama/llama-3.1-8b-instruct:free"
+            elif provider in ["gemini", "google"]:
+                if "2.5-flash" in name:
+                    return "google/gemini-2.5-flash:free"
+                elif "2.5-pro" in name:
+                    return "google/gemini-2.5-pro:free"
+                elif "3.1-flash-lite" in name or "1.5-flash" in name or "2.5-flash-lite" in name:
+                    return "google/gemini-flash-1.5-8b:free"
+            elif provider == "openrouter":
+                return f"openrouter/{name}"
+                
+        # If it matches direct names
+        mapping = {
+            "llama-3.3-70b-versatile": "meta-llama/llama-3.3-70b-instruct:free",
+            "llama-3.1-8b-instant": "meta-llama/llama-3.1-8b-instruct:free",
+            "gemini-3.1-flash-lite": "google/gemini-flash-1.5-8b:free",
+            "gemini-2.5-flash-lite": "google/gemini-flash-1.5-8b:free",
+            "gemini-2.5-flash": "google/gemini-2.5-flash:free",
+            "gemini-2.5-pro": "google/gemini-2.5-pro:free",
+        }
+        return mapping.get(model_name, model_name)
+
+    @classmethod
     def _build_attempt_chain(
         cls,
         task_type: Optional[str],
@@ -390,6 +437,7 @@ class LLMService:
                         seen_keys.add(f"groq/{model}")
                 elif provider == "openrouter" and settings.openrouter_api_key:
                     model = cls.get_model_for_task(task_type) if task_type else settings.default_llm_model
+                    model = cls._normalize_openrouter_model(model)
                     if not cls._is_model_rate_limited("openrouter", model):
                         attempts.append(("openrouter", model))
                         seen_keys.add(f"openrouter/{model}")
@@ -420,6 +468,10 @@ class LLMService:
             if len(parts) == 2:
                 parsed_provider, model_name = parts
                 provider = "gemini" if parsed_provider == "google" else parsed_provider
+                
+                if provider == "openrouter":
+                    model_name = cls._normalize_openrouter_model(primary_model_str)
+                
                 # Ensure we only try direct Google/Groq/OpenAPI/NVIDIA models if they don't have :free tags, or route via openrouter
                 is_valid = True
                 if provider == "nvidia" and not settings.nvidia_api_key:
@@ -472,10 +524,11 @@ class LLMService:
         if settings.openrouter_api_key:
             # Add the fallback models themselves via OpenRouter if not already added directly
             for model_str in fallback_models:
-                key = f"openrouter/{model_str}"
+                normalized_model = cls._normalize_openrouter_model(model_str)
+                key = f"openrouter/{normalized_model}"
                 if key not in seen_keys:
-                    if not cls._is_model_rate_limited("openrouter", model_str):
-                        attempts.append(("openrouter", model_str))
+                    if not cls._is_model_rate_limited("openrouter", normalized_model):
+                        attempts.append(("openrouter", normalized_model))
                         seen_keys.add(key)
 
             # Also add predefined tier defaults from settings
@@ -489,10 +542,11 @@ class LLMService:
             ])
 
             for model_name in openrouter_defaults:
-                key = f"openrouter/{model_name}"
+                normalized_model = cls._normalize_openrouter_model(model_name)
+                key = f"openrouter/{normalized_model}"
                 if key not in seen_keys:
-                    if not cls._is_model_rate_limited("openrouter", model_name):
-                        attempts.append(("openrouter", model_name))
+                    if not cls._is_model_rate_limited("openrouter", normalized_model):
+                        attempts.append(("openrouter", normalized_model))
                         seen_keys.add(key)
 
         # 3. If everything is rate limited, try them anyway as a last resort
@@ -516,7 +570,8 @@ class LLMService:
 
             if settings.openrouter_api_key:
                 for model_str in fallback_models:
-                    attempts.append(("openrouter", model_str))
+                    normalized_model = cls._normalize_openrouter_model(model_str)
+                    attempts.append(("openrouter", normalized_model))
 
         if not attempts:
             raise LLMServiceError(

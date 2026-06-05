@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Sparkles, Loader2, Check, Award, AlertCircle, BookOpen, Layers } from "lucide-react";
+import { Sparkles, Loader2, Check, Award, BookOpen } from "lucide-react";
 import { ResumeDiffViewer } from "../resume/ResumeDiffViewer";
 import { GlassCard } from "../shared/GlassCard";
 import type { HumanReviewDecision } from "../../types/session";
@@ -43,7 +43,6 @@ export function HumanReviewPanel({
   onSubmit,
   isSubmitting = false,
   parsedResume,
-  jobAnalysis,
   initialAtsData
 }: HumanReviewPanelProps) {
   // Store decisions state: maps bullet index to accepted/rejected/edited
@@ -56,12 +55,18 @@ export function HumanReviewPanel({
   // Keep local states for edited content
   const [experienceData, setExperienceData] = useState<JobRewrite[]>(() => {
     const item = suggestions.find((s) => s.agent_type === "resume_rewriter");
-    return item ? (JSON.parse(JSON.stringify(item.output_data)) as JobRewrite[]) : [];
+    if (!item || !item.output_data) return [];
+    return Array.isArray(item.output_data)
+      ? (JSON.parse(JSON.stringify(item.output_data)) as JobRewrite[])
+      : [JSON.parse(JSON.stringify(item.output_data)) as JobRewrite];
   });
 
   const [projectData, setProjectData] = useState<ProjectRewrite[]>(() => {
     const item = suggestions.find((s) => s.agent_type === "project_optimizer");
-    return item ? (JSON.parse(JSON.stringify(item.output_data)) as ProjectRewrite[]) : [];
+    if (!item || !item.output_data) return [];
+    return Array.isArray(item.output_data)
+      ? (JSON.parse(JSON.stringify(item.output_data)) as ProjectRewrite[])
+      : [JSON.parse(JSON.stringify(item.output_data)) as ProjectRewrite];
   });
 
   const handleDecision = (

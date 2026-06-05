@@ -66,6 +66,7 @@ async def create_session(
     )
 
     logger.info(f"Session {session.id} created and workflow execution scheduled.")
+    session.resume = resume
     return session
 
 
@@ -87,7 +88,12 @@ async def get_session(
     current_user: User = Depends(get_db_user)
 ):
     """Retrieve full details of a specific session."""
-    stmt = select(Session).where(Session.id == session_id, Session.user_id == current_user.id)
+    from sqlalchemy.orm import selectinload
+    stmt = (
+        select(Session)
+        .options(selectinload(Session.resume))
+        .where(Session.id == session_id, Session.user_id == current_user.id)
+    )
     result = await db.execute(stmt)
     session = result.scalars().first()
 
@@ -321,15 +327,16 @@ You will simulate a dynamic, realistic debate between two contrasting personas w
 2. AI Tech Lead: Critical, strict, focused on architecture, technologies, scalability, database design, and clean code.
 
 CRITICAL RULES:
-1. ABSOLUTELY NO HALLUCINATIONS: Do NOT invent, assume, or attribute any skills, technologies, projects, or certifications to the candidate if they are not explicitly listed in the Candidate Resume Data. If a skill (e.g. Selenium, Cucumber, Gherkin, UFT, TOSCA) is not present in their resume, you MUST assume they do NOT have it. If the AI Recruiter claims the candidate has a skill not in the resume, that is a severe hallucination error.
-2. STRICT YEARS OF EXPERIENCE COMPARISON: Compare the candidate's years of experience against the job description's requirements. 
+1. ABSOLUTELY NO HALLUCINATIONS: Do NOT invent, assume, or attribute any skills, technologies, projects, or certifications to the candidate if they are not explicitly listed in the Candidate Resume Data. If a skill (e.g. pandas, NumPy, scikit-learn, scikit-image, Angular, Vue, Selenium, Cucumber, Gherkin, UFT, TOSCA) is not present in their resume, you MUST assume they do NOT have it. If the AI Recruiter claims the candidate has a skill not in the resume, that is a severe hallucination error.
+2. STRICT MATCH VERIFICATION: The AI Recruiter and AI Tech Lead must ONLY reference skills that are literally present in the `skills` list or `experience` bullets of the Candidate Resume Data. They must never mention any other skill unless it is literally written in the Candidate Resume Data. If a skill is in the Job Description but not in the Resume, they must treat it as a MISSING skill (skill gap), never as a matched skill.
+3. STRICT YEARS OF EXPERIENCE COMPARISON: Compare the candidate's years of experience against the job description's requirements. 
    - Note: The current year is 2026. Calculate the candidate's total years of experience by summing their work durations or approximating from their college graduation year.
    - If there is a major gap (e.g., candidate has 1 year of experience but the job description requires 4-8 years or 10 years), the AI Tech Lead MUST raise this as a critical block, and the committee should reject or at least heavily penalize the decision.
-3. DECISION CRITERIA:
+4. DECISION CRITERIA:
    - "Reject": If the candidate lacks core "Must-Have" skills of the role (e.g., TOSCA for a Tosca Automation Engineer role) OR has a major years of experience deficit (e.g. 1 year vs 4+ required years), the decision MUST be "Reject".
    - "Approve with Reservations": If they meet most core requirements but have minor skill gaps or slightly less experience.
    - "Approve": Only if they meet or exceed all core requirements and years of experience.
-4. Output format must match this schema:
+5. Output format must match this schema:
 {
   "dialogue": [
     {"speaker": "AI Recruiter" | "AI Tech Lead", "text": "..."}
@@ -350,29 +357,68 @@ Job Description:
 
     from services.llm_service import llm_service
     # Route to FAST_MODEL to prevent rate limits
-    response_text = await llm_service.invoke_with_fallback(
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
-        temperature=0.7,
-        task_type="quick_summary"
-    )
-    
-    from agents.base import extract_json_block
-    clean_text = extract_json_block(response_text)
-    
     try:
+        response_text = await llm_service.invoke_with_fallback(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            temperature=0.7,
+            task_type="hiring_committee"
+        )
+        from agents.base import extract_json_block
+        clean_text = extract_json_block(response_text)
         parsed_json = json.loads(clean_text)
     except Exception as e:
-        logger.warning(f"Debate JSON parse failed: {e}")
+        logger.warning(f"Debate generation or parse failed: {e}")
+        
+        # Resolve target company name dynamically
+        target_company = "the target company"
+        if session.target_company:
+            target_company = session.target_company.strip()
+            if target_company.islower():
+                target_company = target_company.title()
+                
+        # Resolve target role dynamically
+        target_role = "this position"
+        if session.target_role:
+            target_role = session.target_role.strip()
+            
+        # Resolve candidate name dynamically
+        candidate_name = "the candidate"
+        contact_info = parsed_resume.get("contact", {})
+        if contact_info and isinstance(contact_info, dict):
+            name_val = contact_info.get("name")
+            if name_val and isinstance(name_val, str):
+                candidate_name = name_val.strip().split()[0]
+                
+        # Resolve a project name dynamically
+        project_name = "their projects"
+        projects = parsed_resume.get("projects", [])
+        if projects and isinstance(projects, list):
+            first_proj = projects[0]
+            if isinstance(first_proj, dict):
+                proj_name = first_proj.get("name")
+                if proj_name and proj_name != "Unknown":
+                    project_name = f"the {proj_name} project"
+                    
+        # Resolve a skill dynamically
+        skills = parsed_resume.get("skills", [])
+        top_skills = "their technical background"
+        if skills and isinstance(skills, list):
+            valid_skills = [s for s in skills if s]
+            if len(valid_skills) >= 2:
+                top_skills = f"experience with {valid_skills[0]} and {valid_skills[1]}"
+            elif len(valid_skills) == 1:
+                top_skills = f"experience with {valid_skills[0]}"
+
         parsed_json = {
             "dialogue": [
-                {"speaker": "AI Recruiter", "text": "Looking at Mahendra's profile, his experience with LangGraph and Python is highly impressive for this role!"},
-                {"speaker": "AI Tech Lead", "text": "I agree the agentic workflows are solid, but we should make sure his React and frontend scaling matches Deloitte's demands."},
-                {"speaker": "AI Recruiter", "text": "His Candle E-commerce project outlines React.js, which is a great starting block."},
-                {"speaker": "AI Tech Lead", "text": "Yes, if he optimizes database indexing and caching, he'll be a strong fit. Let's approve with reservations."}
+                {"speaker": "AI Recruiter", "text": f"Looking at {candidate_name}'s profile, {top_skills} is highly relevant for the {target_role} role!"},
+                {"speaker": "AI Tech Lead", "text": f"I agree the core skills are there, but we need to ensure their project delivery and technical execution match {target_company}'s engineering standards."},
+                {"speaker": "AI Recruiter", "text": f"Looking at the resume, {project_name} shows solid practical application and execution."},
+                {"speaker": "AI Tech Lead", "text": f"Fair point. If they can adapt quickly to our architecture and follow clean coding practices, they should integrate well. Let's approve with reservations."}
             ],
             "decision": "Approve with Reservations",
-            "summary_verdict": "A strong software engineer with excellent AI/backend experience; minor skill gap in frontend database caching which can be easily bridged."
+            "summary_verdict": f"A strong candidate with relevant experience; minor skill gaps can be easily bridged at {target_company} for the {target_role} role."
         }
         
     # Cache the result in workflow_state

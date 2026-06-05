@@ -92,6 +92,10 @@ class Session(Base):
         "HumanReview", back_populates="session", cascade="all, delete-orphan"
     )
 
+    @property
+    def parsed_resume(self) -> dict:
+        return self.resume.parsed_data if self.resume else {}
+
     def __repr__(self) -> str:
         return f"<Session {self.id} status={self.status}>"
 

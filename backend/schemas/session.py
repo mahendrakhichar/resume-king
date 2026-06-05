@@ -94,6 +94,7 @@ class SessionResponse(BaseModel):
     ats_score_before: Optional[float] = None
     ats_score_after: Optional[float] = None
     job_analysis: Optional[JDAnalysis] = None
+    parsed_resume: Optional[Any] = None
     created_at: datetime
     updated_at: datetime
 

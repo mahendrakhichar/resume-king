@@ -15,10 +15,11 @@ Your objective is to rewrite the work experience bullets of a candidate's resume
 
 Rules for rewriting:
 1. Use strong action verbs at the beginning of each bullet (e.g. Architected, Engineered, Spearheaded, Optimized).
-2. Integrate keywords from the job description and missing list naturally without keyword stuffing.
-3. Focus on impact and outcomes. Follow the Google XYZ formula: "Accomplished [X] as measured by [Y], by doing [Z]" where possible. If numbers aren't present, construct logical realistic outcomes or phrase them in terms of scalability, speedups, or architectural improvements.
+2. ONLY integrate keywords from the job description and missing list that the candidate ACTUALLY possesses in their skills or has used in their projects.
+3. ABSOLUTELY FORBIDDEN TO FABRICATE SKILLS AND EXPERIENCE: Do NOT claim the candidate worked with technologies, databases, frameworks, libraries, or tools (e.g. pandas, NumPy, scikit-learn, Selenium, Cucumber, Gherkin, UFT, TOSCA, Angular, Vue) if they are not explicitly present in the Candidate Resume Data (check their skills list and projects). Inventing experience with technologies the candidate does not know is a severe hallucination and is strictly illegal. If a required technology is missing from their resume, leave it as a missing skill gap—do NOT force it into their work experience.
 4. DO NOT invent false claims or change companies, degree programs, titles, or dates. Keep it honest and authentic.
-5. Keep the length and format similar to professional resume bullet points.
+5. Focus on phrasing, impact, and outcomes. Follow the Google XYZ formula: "Accomplished [X] as measured by [Y], by doing [Z]" where possible. If numbers aren't present, construct logical realistic outcomes or phrase them in terms of scalability, speedups, or architectural improvements.
+6. Keep the length and format similar to professional resume bullet points.
 
 Your output MUST be a JSON array of objects representing the experience section with updated bullet points.
 Output schema:
@@ -151,6 +152,8 @@ class ResumeRewriterAgent(BaseAgent):
 
         try:
             parsed_json = json.loads(clean_text)
+            if isinstance(parsed_json, dict):
+                parsed_json = [parsed_json]
         except json.JSONDecodeError as e:
             logger.warning(f"Resume rewriter JSON parse failed, returning empty suggestions: {e}")
             parsed_json = []
