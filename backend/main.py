@@ -54,10 +54,23 @@ app = FastAPI(
 )
 
 # Configure CORS Middleware
-# Allows seamless API queries from modern frontend setups (such as React on Vite)
+# Allows seamless API queries from modern frontend setups (such as React on Vite or production Vercel)
+frontend_origins = []
+if settings.frontend_url:
+    # Split comma-separated list and strip trailing slashes / whitespaces
+    frontend_origins = [url.strip().rstrip("/") for url in settings.frontend_url.split(",") if url.strip()]
+else:
+    frontend_origins = ["http://localhost:5173"]
+
+# Fallback for development servers
+if settings.app_env == "development" or settings.app_debug:
+    for local_origin in ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"]:
+        if local_origin not in frontend_origins:
+            frontend_origins.append(local_origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url],
+    allow_origins=frontend_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
