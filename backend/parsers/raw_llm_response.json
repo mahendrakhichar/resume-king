@@ -46,7 +46,7 @@
       "location": null,
       "start_date": null,
       "end_date": null,
-      "is_current": null,
+      "is_current": true,
       "bullets": [
         "Working on Optavise, a client healthcare-plan automation platform focused on automating updates across healthcare compliance documents such as HPBS, SBCs, SPDs, and HPCCs.",
         "Designed and developed Agentic AI workflows using LangGraph, Python, Azure, and OpenAI APIs to propagate document changes automatically, reducing manual effort by 70%.",
@@ -61,26 +61,26 @@
       "degree": "B.Tech in Electronics Engineering",
       "field_of_study": "Electronics Engineering",
       "start_date": "2021",
-      "end_date": "Current",
-      "gpa": "7.6",
+      "end_date": null,
+      "gpa": 7.6,
       "highlights": []
     },
     {
       "institution": "KVM, Sikar",
       "degree": "RBSE XII",
       "field_of_study": null,
-      "start_date": null,
-      "end_date": "2021",
-      "gpa": "97.80",
+      "start_date": "2021",
+      "end_date": null,
+      "gpa": 97.8,
       "highlights": []
     },
     {
       "institution": "SVGMS, Didwana",
       "degree": "CBSE X",
       "field_of_study": null,
-      "start_date": null,
-      "end_date": "2019",
-      "gpa": "91.40",
+      "start_date": "2019",
+      "end_date": null,
+      "gpa": 91.4,
       "highlights": []
     }
   ],
@@ -88,10 +88,7 @@
     {
       "name": "Candle E-commerce Website",
       "description": null,
-      "technologies": [
-        "Full Stack",
-        "Admin Panel"
-      ],
+      "technologies": [],
       "url": null,
       "bullets": [
         "Developed a fully functional website from scratch with frontend, backend, and admin panel.",
@@ -102,31 +99,6 @@
     }
   ],
   "certifications": [],
-  "achievements": [
-    {
-      "name": null,
-      "description": "Solved 600+ problems on LeetCode, GeeksforGeeks, and Code Studio, showcasing strong algorithm and data structure skills.",
-      "date": null,
-      "url": null
-    },
-    {
-      "name": null,
-      "description": "Successfully deployed 15+ full-stack and backend/frontend projects.",
-      "date": null,
-      "url": null
-    },
-    {
-      "name": null,
-      "description": "Ranked 22nd in Naukri.com Coding Contest.",
-      "date": null,
-      "url": null
-    },
-    {
-      "name": null,
-      "description": "Scored under 41k in JEE, demonstrating strong academic abilities in STEM subjects.",
-      "date": null,
-      "url": null
-    }
-  ],
+  "achievements": [],
   "languages": []
 }
