@@ -5,6 +5,7 @@ __pycache__/
 
 # Environments
 .env
+.env.*
 .venv/
 env/
 venv/
@@ -17,6 +18,10 @@ uploads/
 *.db
 *.sqlite
 *.sqlite3
+
+# Parser debug artifacts
+parsers/raw_llm_response.json
+*.json.tmp
 
 # Unit test / coverage reports
 .pytest_cache/

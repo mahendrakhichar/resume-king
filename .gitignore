@@ -1,5 +1,6 @@
-# User-requested exclusions
+# User-requested exclusions & private working docs
 testing/
+interview/
 
 # Dependency directories
 node_modules/
@@ -10,14 +11,14 @@ ENV/
 backend/.venv/
 frontend/node_modules/
 
-# Local environment configuration
+# Local environment configuration (NEVER COMMIT SECRETS)
 .env
 .env.local
 .env.*.local
 backend/.env
 frontend/.env
 
-# Local database and document storage caches
+# Local database, vector stores, and uploads
 chroma_db/
 backend/chroma_db/
 uploads/
@@ -30,17 +31,23 @@ backend/uploads/
 __pycache__/
 backend/__pycache__/
 *.py[cod]
+*$py.class
 .pytest_cache/
 .mypy_cache/
+htmlcov/
+.tox/
 
 # Frontend builds
 dist/
 dist-ssr/
 frontend/dist/
 
-# IDEs, Editors, and OS-specific files
+# IDEs, Editors, AI Assistant configs, and OS-specific files
 .vscode/
 .idea/
+.agents/
+backend/.agents/
+frontend/.agents/
 *.suo
 *.ntvs*
 *.njsproj
@@ -49,9 +56,10 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
-# Log files
+# Log files and parser test dumps
 *.log
 logs/
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
+backend/parsers/raw_llm_response.json
