@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+
 import { useParams, Link } from "react-router-dom";
 import { Loader2, FileDown, ArrowLeft, Check, AlertTriangle, Copy, Award, MessageSquare, Terminal, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -27,10 +28,14 @@ export default function SessionPage() {
   const [activeTab, setActiveTab] = useState<"dashboard" | "interview" | "outreach" | "ats">("dashboard");
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [openTips, setOpenTips] = useState<Record<number, boolean>>({});
-  
+
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
   const [showScoreCelebration, setShowScoreCelebration] = useState(false);
   const [timerFinished, setTimerFinished] = useState(false);
+
+  // Show a "free tier is slow" hint after 20s of processing
+  const [showSlowHint, setShowSlowHint] = useState(false);
+  const slowHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (activeSession) {
@@ -87,6 +92,33 @@ export default function SessionPage() {
       fetchAgentResults(id);
     }
   }, [id, fetchSessionDetail, fetchAgentResults]);
+
+  // Slow-render hint: show after 20s if still processing
+  useEffect(() => {
+    const isProcessing = activeSession &&
+      activeSession.status !== "completed" &&
+      activeSession.status !== "failed";
+
+    if (isProcessing) {
+      if (!slowHintTimer.current) {
+        slowHintTimer.current = setTimeout(() => setShowSlowHint(true), 20000);
+      }
+    } else {
+      // Session done or failed — clear timer and hide hint
+      if (slowHintTimer.current) {
+        clearTimeout(slowHintTimer.current);
+        slowHintTimer.current = null;
+      }
+      setShowSlowHint(false);
+    }
+
+    return () => {
+      if (slowHintTimer.current) {
+        clearTimeout(slowHintTimer.current);
+        slowHintTimer.current = null;
+      }
+    };
+  }, [activeSession?.status]);
 
   // WebSocket message receiver callback
   const handleWebSocketMessage = useCallback(
@@ -542,15 +574,39 @@ export default function SessionPage() {
               </div>
             </GlassCard>
           ) : (
-            <GlassCard className="flex flex-col items-center justify-center text-center p-12 space-y-6">
-              <Loader2 className="w-12 h-12 text-purple-400 animate-spin" />
-              <div className="space-y-2">
-                <h3 className="text-lg font-bold text-white">AI Multi-Agent Workflow In Progress...</h3>
-                <p className="text-xs text-slate-400 max-w-sm">
-                  The agents are currently executing analysis, scoring, and rewrites in parallel. Follow the workflow tracker on the right.
-                </p>
-              </div>
-            </GlassCard>
+            <>
+              <GlassCard className="flex flex-col items-center justify-center text-center p-12 space-y-6">
+                <Loader2 className="w-12 h-12 text-purple-400 animate-spin" />
+                <div className="space-y-2">
+                  <h3 className="text-lg font-bold text-white">AI Multi-Agent Workflow In Progress...</h3>
+                  <p className="text-xs text-slate-400 max-w-sm">
+                    The agents are currently executing analysis, scoring, and rewrites in parallel. Follow the workflow tracker on the right.
+                  </p>
+                </div>
+              </GlassCard>
+
+              {/* Free-tier slow-render hint — shown after 20s */}
+              {showSlowHint && (
+                <div
+                  className="flex items-start gap-3 p-4 rounded-xl border animate-in slide-in-from-bottom-2 duration-500"
+                  style={{
+                    background: "rgba(139,92,246,0.07)",
+                    borderColor: "rgba(139,92,246,0.25)",
+                  }}
+                >
+                  <span style={{ fontSize: "18px", lineHeight: 1, marginTop: "1px" }}>☕</span>
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-purple-300">
+                      Taking a bit longer than usual?
+                    </p>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      You're on the <span className="text-purple-400 font-semibold">free tier</span> — the AI pipeline can take up to
+                      60 seconds on first run as the server warms up. Hang tight, your resume is being tailored! 🚀
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 

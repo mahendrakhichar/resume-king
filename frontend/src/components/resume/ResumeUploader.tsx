@@ -220,7 +220,8 @@ export function ResumeUploader({ onUploadSuccess }: ResumeUploaderProps) {
           </div>
 
           {/* Retry button */}
-          {lastFile && (errorCategory === "timeout" || errorCategory === "rate_limit" || errorCategory === "network" || errorCategory === "unknown") && (
+          {lastFile && (errorCategory === "timeout" || errorCategory === "rate_limit" || errorCategory === "network" || errorCategory === "unknown" || errorCategory === "auth") && (
+
             <button
               onClick={(e) => {
                 e.stopPropagation();

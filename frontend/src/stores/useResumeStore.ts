@@ -46,7 +46,7 @@ function categorizeError(e: unknown): { message: string; category: ErrorCategory
 
   // HTTP-based classification
   if (status === 429) return { message: "AI model rate limit reached — please wait and retry.", category: "rate_limit" };
-  if (status === 401 || status === 403) return { message: "Authentication error — please sign in again.", category: "auth" };
+  if (status === 401 || status === 403) return { message: "Session token expired — the server may have just woken up. Click Retry to refresh.", category: "auth" };
   if (status === 408 || detail.toLowerCase().includes("timeout")) return { message: "Server processing timed out — click Retry to try again.", category: "timeout" };
   if (status === 500 && detail.toLowerCase().includes("rate")) return { message: "AI model rate limit reached — switched to backup model, retrying...", category: "rate_limit" };
 
