@@ -19,7 +19,8 @@ function categorizeSessionError(e: unknown): { message: string; category: ErrorC
   const detail = err.response?.data?.detail || "";
 
   if (status === 429) return { message: "AI rate limit reached — please try again later.", category: "rate_limit" };
-  if (status === 401 || status === 403) return { message: "Authentication error — please sign in again.", category: "auth" };
+  if (status === 401 || status === 403) return { message: "Session token expired — the server may have just woken up. Click Retry to refresh.", category: "auth" };
+
   if (detail.toLowerCase().includes("timeout")) return { message: "Processing timed out — the AI agent exceeded the 5-minute limit.", category: "timeout" };
   if (detail.toLowerCase().includes("rate")) return { message: "AI model rate limit reached — backup model was tried.", category: "rate_limit" };
 
